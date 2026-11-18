@@ -58,7 +58,6 @@ async function authGuard(req, res, next) {
       role: role.title,
       roleId: role.id,
     };
-    console.log("AUTH GUARD USER:", req.user);
     return next();
   } catch (error) {
     return next(error);
