@@ -1,4 +1,4 @@
-const { dataTypes, DataTypes } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/sequelize.config");
 const { productTypes } = require("../../common/constat/product.constat");
 
@@ -20,8 +20,7 @@ const Product = sequelize.define(
   },
   {
     modelName: "product",
-    updatedAt: "updated_at",
-    createdAt: ":created_at",
+    timestamps: false,
   },
 );
 
@@ -69,8 +68,10 @@ const ProductSize = sequelize.define(
     active_discount: { type: DataTypes.INTEGER, allowNull: true },
   },
   {
-    modelName: "product_size",
+    modelName: "product",
     timestamps: false,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
   },
 );
 module.exports = {

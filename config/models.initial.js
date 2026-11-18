@@ -9,13 +9,11 @@ const {
   ProductSize,
 } = require("../modules/product/product.model");
 const {
-  permission,
-  role,
   Role,
   rolePermission,
   Permission,
 } = require("../modules/RBAC/rback.model");
-const { refreshToken } = require("../modules/user/refresh.model");
+const { RefreshToken } = require("../modules/user/refresh.model");
 const { User, Otp } = require("../modules/user/user.model");
 const sequelize = require("./sequelize.config");
 
@@ -94,7 +92,7 @@ async function initDatabases() {
   Order.hasMany(OrderItems, {
     foreignKey: "orderId",
     sourceKey: "id",
-    as: "item",
+    as: "items",
   });
   User.hasMany(Order, { foreignKey: "userId", sourceKey: "id", as: "orders" });
   OrderItems.belongsTo(Order, { foreignKey: "orderId", sourceKey: "id" });
@@ -143,30 +141,44 @@ async function initDatabases() {
     onDelete: "CASCADE",
   });
 
-  Role.hasMany(Permission, {
+  User.belongsTo(Role, {
     foreignKey: "roleId",
-    sourceKey: "id",
-    as: "permission",
+    as: "userRole",
   });
-  Permission.hasMany(Role, {
+
+  Role.hasMany(User, {
     foreignKey: "roleId",
-    sourceKey: "id",
-    as: "role",
+    as: "users",
   });
+
+  Role.belongsToMany(Permission, {
+    through: {
+      model: rolePermission,
+      unique: false,
+    },
+    foreignKey: "roleId",
+    otherKey: "permissionId",
+    as: "permissions",
+  });
+
+  Permission.belongsToMany(Role, {
+    through: {
+      model: rolePermission,
+      unique: false,
+    },
+    foreignKey: "permissionId",
+    otherKey: "roleId",
+    as: "roles",
+  });
+
   rolePermission.belongsTo(Role, { foreignKey: "roleId", targetKey: "id" });
   rolePermission.belongsTo(Permission, {
     foreignKey: "permissionId",
     targetKey: "id",
   });
 
-  // Basket.sync({});
-  // Discount.sync({});
-  // Order.sync({});
-  // OrderItems.sync({});
-  // Payment.sync({});
-  // refreshToken.sync();
-
-  await sequelize.sync({ force: true });
+  await sequelize.authenticate();
+  console.log("Database connection verified");
 }
 
 module.exports = initDatabases;

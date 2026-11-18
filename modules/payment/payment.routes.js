@@ -1,9 +1,11 @@
 const { Router } = require("express");
 const authGuard = require("../auth/auth.guard");
-const { paymentBasketHandler } = require("./payment.service");
-
-const router = Router()
+const {
+  paymentBasketHandler,
+  paymentVerifyHandler,
+} = require("./payment.service");
+const router = Router();
 router.post("/", authGuard, paymentBasketHandler);
-module.exports = {
-    paymentRoutes : router
-}
+router.get("/callback", paymentVerifyHandler);
+router.get("/verify", paymentVerifyHandler);
+module.exports = { paymentRoutes: router };

@@ -1,12 +1,23 @@
+
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/sequelize.config");
 
 const Role = sequelize.define(
   "role",
   {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    title: { type: DataTypes.TEXT, allowNull: false },
-    description: { type: DataTypes.TEXT, allowNull: true },
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    title: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
   },
   {
     timestamps: false,
@@ -17,9 +28,19 @@ const Role = sequelize.define(
 const Permission = sequelize.define(
   "permission",
   {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    title: { type: DataTypes.TEXT, allowNull: false },
-    description: { type: DataTypes.TEXT, allowNull: true },
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    title: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
   },
   {
     timestamps: false,
@@ -30,11 +51,18 @@ const Permission = sequelize.define(
 const rolePermission = sequelize.define(
   "role_permission",
   {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    roleId: { type: DataTypes.INTEGER },
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    roleId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     permissionId: {
       type: DataTypes.INTEGER,
-      primaryKey: true,
+      allowNull: false,
     },
   },
   {

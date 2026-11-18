@@ -6,8 +6,8 @@ const RefreshToken = sequelize.define(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     fullname: { type: DataTypes.STRING, allowNull: true },
-    token: { type: DataTypes.TEXT, allowNull: false },
-    userId: { type: DataTypes.INTEGER, allowNull: "true" },
+  token: {type: DataTypes.STRING(64),allowNull: false,unique: true},
+  userId: { type: DataTypes.INTEGER, allowNull: true },
   },
   {
     modelName: "refresh_token",

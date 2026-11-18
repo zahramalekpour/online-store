@@ -1,21 +1,17 @@
 const { Router } = require("express");
 const authGuard = require("../auth/auth.guard");
+const requireRole = require("../auth/requirerole");
 const {
-  getMyOrdersHandler,
-  getOrderByIdHandler,
-  setPackedStatusToOrder,
-  setInTransitStatusToOrder,
-  setCanceledStatusToOrder,
-  setDeliveryStatusToOrder,
+  getMyOrdersHandler, getOrderByIdHandler, setPackedStatusToOrder,
+  setInTransitStatusToOrder, setCanceledStatusToOrder, setDeliveryStatusToOrder,
 } = require("./order.service");
-
 const router = Router();
-
-router.get("/", authGuard, getMyOrdersHandler);
-router.get("/:id", authGuard, getOrderByIdHandler);
-router.patch("/set-packed/:id", authGuard, setPackedStatusToOrder);
-router.patch("/set-in-transit/:id", authGuard, setInTransitStatusToOrder);
-router.patch("/set-canceled/:id", authGuard, setCanceledStatusToOrder);
-router.patch("/set-delivery/:id", authGuard, setDeliveryStatusToOrder);
-
+router.use(authGuard);
+router.get("/", getMyOrdersHandler);
+router.get("/:id", getOrderByIdHandler);
+// These routes change fulfillment state and must never be accessible to customers.
+router.patch("/set-packed/:id", requireRole("admin"), setPackedStatusToOrder);
+router.patch("/set-in-transit/:id", requireRole("admin"), setInTransitStatusToOrder);
+router.patch("/set-canceled/:id", requireRole("admin"), setCanceledStatusToOrder);
+router.patch("/set-delivery/:id", requireRole("admin"), setDeliveryStatusToOrder);
 module.exports = { orderRoutes: router };
