@@ -176,9 +176,9 @@ async function initDatabases() {
     foreignKey: "permissionId",
     targetKey: "id",
   });
-
   await sequelize.authenticate();
   console.log("Database connection verified");
+  await sequelize.sync();
 }
 
 module.exports = initDatabases;
