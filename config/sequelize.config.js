@@ -11,16 +11,8 @@ const sequelize = new Sequelize(
   port: Number(process.env.DB_PORT),
   timezone: "+00:00",
   logging: false,
+  dialectOptions: { ssl: { minVersion: "TLSv1.2", rejectUnauthorized: true } },
 }
 );
-// sequelize
-//   .authenticate()
-//   .then(() => {
-//     console.log("connected successfully to maria db");
-//   })
-//   .catch((error) => {
-//     console.log("cannot connect to mariadb");
-//   });
-// console.log("DB_NAME =", process.env.DB_NAME);
 
 module.exports = sequelize;
