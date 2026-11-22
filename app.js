@@ -22,6 +22,12 @@ app.get("/health", (req, res) => {
     service: "online-store-backend",
   });
 });
+app.get("/", (req, res) => {
+  res.status(200).json({
+    message: "Online Store Backend is running",
+    status: "success",
+  });
+});
 
 app.get("/auth/test", authGuard, (req, res) => {
   res.status(200).json({
