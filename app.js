@@ -16,8 +16,21 @@ const swaggerUiDist = require("swagger-ui-dist");
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.get("/swagger.json", (req, res) => res.json(swaggerSpec));
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get("/api-docs", (req, res) => {
+  res.send(`<!doctype html>
+<html><head>
+  <meta charset="utf-8">
+  <title>Online Store API Docs</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+</head><body>
+  <div id="swagger-ui"></div>
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>SwaggerUIBundle({ url: '/swagger.json', dom_id: '#swagger-ui' });</script>
+</body></html>`);
+});
+// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "ok",
