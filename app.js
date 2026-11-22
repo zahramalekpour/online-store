@@ -11,21 +11,21 @@ const { adminRouter } = require("./modules/admin/admin.routes");
 const { authRouter } = require("./modules/auth/auth.routes");
 const authGuard = require("./modules/auth/auth.guard");
 const { swaggerUi, swaggerSpec } = require("./config/swagger.config");
-const swaggerUi = require('swagger-ui-express');
+// const swaggerUi = require('swagger-ui-express');
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-// app.use(
-//   "/api-docs",
-//   swaggerUi.serveFiles(swaggerSpec),
-//   swaggerUi.setup(swaggerSpec, {
-//     explorer: true,
-//     customSiteTitle: "Online Store API Docs",
-//   }),
-// );
+// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(
+  "/api-docs",
+  swaggerUi.serveFiles(swaggerSpec),
+  swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    customSiteTitle: "Online Store API Docs",
+  }),
+);
 
 
 app.get("/api-docs.json", (req, res) => {
