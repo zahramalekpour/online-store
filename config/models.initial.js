@@ -177,11 +177,18 @@ async function initDatabases() {
     targetKey: "id",
   });
   await sequelize.authenticate();
+  await sequelize.authenticate();
   console.log("Database connection verified");
-  await sequelize.sync({
-    alter: false,
-    force: false,
-  });
+
+  // Temporarily disable automatic schema synchronization
+  // await sequelize.sync();
+
+  console.log("Database synchronization skipped");
+  // console.log("Database connection verified");
+  // await sequelize.sync({
+  //   alter: false,
+  //   force: false,
+  // });
 }
 
 module.exports = initDatabases;
