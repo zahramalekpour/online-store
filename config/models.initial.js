@@ -178,7 +178,10 @@ async function initDatabases() {
   });
   await sequelize.authenticate();
   console.log("Database connection verified");
-  await sequelize.sync();
+  await sequelize.sync({
+    alter: false,
+    force: false,
+  });
 }
 
 module.exports = initDatabases;
