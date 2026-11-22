@@ -13,20 +13,15 @@ const authGuard = require("./modules/auth/auth.guard");
 const { swaggerUi, swaggerSpec } = require("./config/swagger.config");
 const path = require("path");
 const swaggerUiDist = require("swagger-ui-dist");
-const { swaggerSpec } = require("./config/swagger.config");
-
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(
-  "/api-docs",
-  express.static(swaggerUiDist.absolutePath())
-);
+app.use("/api-docs", express.static(swaggerUiDist.absolutePath()));
 
 app.get("/api-docs.json", (req, res) => {
   res.json(swaggerSpec);
-}); 
+});
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "ok",
