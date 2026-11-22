@@ -11,8 +11,13 @@ const { adminRouter } = require("./modules/admin/admin.routes");
 const { authRouter } = require("./modules/auth/auth.routes");
 const authGuard = require("./modules/auth/auth.guard");
 const { swaggerUi, swaggerSpec } = require("./config/swagger.config");
+const swaggerUi = require('swagger-ui-express');
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(
   "/api-docs",
   swaggerUi.serveFiles(swaggerSpec),
@@ -22,8 +27,6 @@ app.use(
   }),
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 app.get("/api-docs.json", (req, res) => {
   res.json(swaggerSpec);
