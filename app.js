@@ -19,22 +19,14 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(
   "/api-docs",
-  swaggerUi.serveFiles(swaggerSpec),
-  swaggerUi.setup(swaggerSpec, {
-    explorer: true,
-    customSiteTitle: "Online Store API Docs",
-  }),
+  express.static(swaggerUiDist.absolutePath())
 );
 
 app.get("/api-docs.json", (req, res) => {
   res.json(swaggerSpec);
-});
-app.get("/api-docs.json", (req, res) => {
-  res.json(swaggerSpec);
-});
+}); 
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "ok",
