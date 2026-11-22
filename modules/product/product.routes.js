@@ -7,9 +7,6 @@ const {
   removeProductByIdHandler,
 } = require("./product.service");
 const router = Router();
-router.post("/", createProductValidation, createProductHandler);
-router.get("/", getProductHandler);
-router.get("/:id", getProductByIdHandler);
 /**
  * @openapi
  * /product:
@@ -25,6 +22,7 @@ router.get("/:id", getProductByIdHandler);
  *         description: Internal server error
  */
 router.get("/", getProductHandler);
-router.get("/", getProductHandler);
+router.post("/", createProductValidation, createProductHandler);
+router.get("/:id", getProductByIdHandler);
 router.delete("/:id", removeProductByIdHandler);
 module.exports = { productRoutes: router };
