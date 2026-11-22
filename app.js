@@ -13,6 +13,8 @@ const authGuard = require("./modules/auth/auth.guard");
 const { swaggerUi, swaggerSpec } = require("./config/swagger.config");
 const path = require("path");
 const swaggerUiDist = require("swagger-ui-dist");
+const swaggerUi = require("swagger-ui-express");
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
