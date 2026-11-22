@@ -19,13 +19,16 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   "/api-docs",
-  swaggerUi.serve,
+  swaggerUi.serveFiles(swaggerSpec),
   swaggerUi.setup(swaggerSpec, {
     explorer: true,
     customSiteTitle: "Online Store API Docs",
   }),
 );
 
+app.get("/api-docs.json", (req, res) => {
+  res.json(swaggerSpec);
+});
 app.get("/api-docs.json", (req, res) => {
   res.json(swaggerSpec);
 });
