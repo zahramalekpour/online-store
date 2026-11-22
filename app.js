@@ -11,7 +11,9 @@ const { adminRouter } = require("./modules/admin/admin.routes");
 const { authRouter } = require("./modules/auth/auth.routes");
 const authGuard = require("./modules/auth/auth.guard");
 const { swaggerUi, swaggerSpec } = require("./config/swagger.config");
-// const swaggerUi = require('swagger-ui-express');
+const path = require("path");
+const swaggerUiDist = require("swagger-ui-dist");
+const { swaggerSpec } = require("./config/swagger.config");
 
 const app = express();
 app.use(express.json());
@@ -26,7 +28,6 @@ app.use(
     customSiteTitle: "Online Store API Docs",
   }),
 );
-
 
 app.get("/api-docs.json", (req, res) => {
   res.json(swaggerSpec);
