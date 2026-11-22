@@ -13,10 +13,6 @@ const authGuard = require("./modules/auth/auth.guard");
 const { swaggerUi, swaggerSpec } = require("./config/swagger.config");
 
 const app = express();
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
 app.use(
   "/api-docs",
   swaggerUi.serveFiles(swaggerSpec),
@@ -25,6 +21,9 @@ app.use(
     customSiteTitle: "Online Store API Docs",
   }),
 );
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/api-docs.json", (req, res) => {
   res.json(swaggerSpec);
