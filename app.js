@@ -17,11 +17,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api-docs", express.static(swaggerUiDist.absolutePath()));
-
-app.get("/api-docs.json", (req, res) => {
-  res.json(swaggerSpec);
-});
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "ok",
