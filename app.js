@@ -25,6 +25,15 @@ app.use(
   }),
 );
 
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    customSiteTitle: "Online Store API Docs",
+  }),
+);
+
 app.get("/api-docs.json", (req, res) => {
   res.json(swaggerSpec);
 });
