@@ -46,6 +46,7 @@ app.get(["/api-docs", "/api-docs/"], (req, res) => {
             window.ui = SwaggerUIBundle({
               url: "/api-docs.json",
               dom_id: "#swagger-ui",
+              validatorUrl: null,
               deepLinking: true,
               presets: [
                 SwaggerUIBundle.presets.apis,
