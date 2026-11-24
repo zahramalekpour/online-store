@@ -9,13 +9,57 @@ const { rbacRouter } = require("./modules/RBAC/rbac.routes");
 const { adminRouter } = require("./modules/admin/admin.routes");
 const { authRouter } = require("./modules/auth/auth.routes");
 const authGuard = require("./modules/auth/auth.guard");
-const { swaggerUi, swaggerSpec } = require("./config/swagger.config");
+const { swaggerSpec } = require("./config/swagger.config");
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(compression());
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+app.get("/api-docs.json", (req, res) => {
+  res.status(200).json(swaggerSpec);
+});
+
+app.get(["/api-docs", "/api-docs/"], (req, res) => {
+  res.type("html").send(`
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1" />
+        <title>Online Store API Documentation</title>
+
+        <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.10.5/swagger-ui.css" />
+      </head>
+
+      <body>
+        <div id="swagger-ui"></div>
+
+        <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.10.5/swagger-ui-standalone-preset.js"></script>
+
+        <script>
+          window.onload = function () {
+            window.ui = SwaggerUIBundle({
+              url: "/api-docs.json",
+              dom_id: "#swagger-ui",
+              deepLinking: true,
+              presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset
+              ],
+              layout: "StandaloneLayout",
+              persistAuthorization: false
+            });
+          };
+        </script>
+      </body>
+    </html>
+  `);
+});
 
 app.get("/api-docs.json", (req, res) => {
   res.status(200).json(swaggerSpec);
