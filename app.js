@@ -1,8 +1,7 @@
 require("dotenv").config();
-
 const express = require("express");
-
 const { productRoutes } = require("./modules/product/product.routes");
+const compression = require("compression");
 const { basketRoutes } = require("./modules/basket/basket.routes");
 const { paymentRoutes } = require("./modules/payment/payment.routes");
 const { orderRoutes } = require("./modules/order/order.routes");
@@ -11,13 +10,13 @@ const { adminRouter } = require("./modules/admin/admin.routes");
 const { authRouter } = require("./modules/auth/auth.routes");
 const authGuard = require("./modules/auth/auth.guard");
 const { swaggerUi, swaggerSpec } = require("./config/swagger.config");
-const path = require("path");
-const swaggerUiDist = require("swagger-ui-dist");
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(compression());
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.get("/api-docs.json", (req, res) => {
   res.status(200).json(swaggerSpec);
 });
