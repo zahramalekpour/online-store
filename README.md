@@ -1,261 +1,154 @@
 # 🛍️ Online Store Backend
 
-**A practical e-commerce REST API built with Node.js, Express.js, Sequelize, and TiDB.**
+**A modular e-commerce REST API built with Node.js, Express, Sequelize, and TiDB.**
 
-Hi there! 👋
+Hi! 👋 I built this project to practice the parts of backend development that go beyond basic CRUD: authentication, access control, product variants, stock reservations, checkout, and order management. I wanted to understand how these pieces fit together, and how a system behaves when something goes wrong.
 
-Welcome to my Online Store Backend project.
+**Portfolio MVP · v1.0.0**
 
-I built this project to explore how the different parts of an e-commerce backend work together — from authentication and product management to shopping carts, orders, payments, and access control.
-
-My goal wasn't just to create a collection of endpoints. I wanted to work with real backend challenges, such as managing stock safely, handling payment failures, protecting user data, and keeping the code organized and testable.
-
-This is a **portfolio and learning project**, not a production storefront.
-
-## 🚀 Explore the Project
-
-**Want to take a quick look? Start here:**
+## 🚀 Explore in a minute
 
 | | Link |
 |---|---|
-| 📖 Interactive API Documentation | [Open Swagger UI](https://online-store-qihx.onrender.com/api-docs/) |
-| 💚 API Health Check | [Check API Status](https://online-store-qihx.onrender.com/health) |
-| 📄 OpenAPI Specification | [View API JSON](https://online-store-qihx.onrender.com/api-docs.json) |
-| 💻 Source Code | [GitHub Repository](https://github.com/zahramalekpour/online-store) |
+| 📖 API documentation | [Swagger UI](https://online-store-qihx.onrender.com/api-docs/) |
+| 💚 Health check | [Server status](https://online-store-qihx.onrender.com/health) |
+| 📄 OpenAPI specification | [API JSON](https://online-store-qihx.onrender.com/api-docs.json) |
+| 💻 Source | [GitHub repository](https://github.com/zahramalekpour/online-store) |
 
-**No local setup is needed to explore the public API documentation.**
+**Reviewing the project?** Swagger is the quickest starting point; no local setup is needed to browse the API. Protected operations require authentication, and admin actions require the appropriate role or permission. Please avoid triggering payment requests or changing live demo data. The hosted service may need some time to wake after inactivity.
 
-Protected endpoints require authentication. Administrative operations require appropriate roles and permissions.
+## ✨ Features
 
-The live demo may take a moment to become available if the hosting service has been idle.
-
-## ✨ What's Inside?
-
-The backend is organized around seven main API modules.
-
-| Module | What it does |
+| Area | What it does |
 |---|---|
-| 🔐 Authentication | OTP-based login, JWT authentication, token refresh and logout |
-| 📦 Products | Product creation, listing, details, color and size variants |
-| 🛒 Basket | Shopping cart operations, quantities, pricing and discounts |
-| 🧾 Orders | Order history, order details and controlled status changes |
-| 💳 Payments | Zarinpal integration, checkout and payment verification |
-| 🛡️ RBAC | Roles, permissions and access restrictions |
-| 👤 Admin | User management, role assignment and permission-protected operations |
+| 🔐 Authentication | OTP login workflow, JWT access/refresh tokens, logout |
+| 📦 Products | Create, list, view, and remove products; color and size variants |
+| 🛒 Basket | Item management, stock checks, pricing, discounts |
+| 🧾 Orders | Customer order history and controlled fulfillment states |
+| 💳 Payments | Zarinpal integration, server-side verification, checkout idempotency |
+| 🛡️ RBAC | Roles, permissions, and role-permission assignment |
+| 👤 Admin | User search, pagination, profile updates, role assignment |
 
-### A few implementation details I'm particularly interested in
+**A few details worth exploring:** Checkout uses transactions and reserves stock before initiating gateway payment. Basket and order reads are scoped to the authenticated user. Admin operations use role checks, with granular permission checks on user-management endpoints.
 
-**Safer checkout flow**
+### Checkout flow
 
-Checkout uses database transactions and idempotency keys to help prevent duplicate order creation. Stock is reserved during payment initialization, with a separate process for handling expired reservations.
+```mermaid
+flowchart TD
+    A["POST /payment with address and Idempotency-Key"] --> B{"Existing checkout?"}
+    B -- Yes --> C["Return existing result or conflict"]
+    B -- No --> D["Transaction: validate basket, reserve stock, create payment and order"]
+    D --> E["Request Zarinpal authority and return gateway URL"]
+    E --> F["Callback or verification endpoint"]
+    F --> G{"Gateway verification successful?"}
+    G -- Yes --> H["If still pending: mark paid, update order, clear matching basket items"]
+    G -- No or uncertain --> I["Keep pending for expiry or manual reconciliation"]
+```
 
-**Authentication and access control**
+Reservations are set to **20 minutes**. A separate expiration worker handles eligible pending payments. If a callback arrives after the worker has already released a reservation, the verification handler **does not complete the order as paid**: it returns a conflict requiring reconciliation or refund handling. An automated late-payment refund/reconciliation flow is not implemented as part of the verified checkout handler.
 
-The API uses JWT access tokens and checks roles and permissions before allowing protected operations. Users are restricted to their own basket and order resources.
+## 🧰 Tech stack
 
-**Product variants**
-
-Products support simple, color-based and size-based structures, with individual stock and pricing information for variants.
-
-**Order lifecycle**
-
-Order transitions are controlled rather than allowing arbitrary status changes. Administrative actions are restricted, and cancellations require a reason.
-
-These areas helped me better understand the challenges involved in building backend systems beyond basic CRUD operations.
-
-## 🧰 Tech Stack
-
-| Area | Technology |
+| Layer | Tools |
 |---|---|
-| Runtime | Node.js |
-| Backend Framework | Express.js |
-| ORM | Sequelize |
-| Database | TiDB (MySQL-compatible) |
-| Authentication | JWT and OTP |
-| Access Control | RBAC and permission-based middleware |
-| API Documentation | Swagger / OpenAPI |
-| Payment Gateway | Zarinpal |
+| Runtime / API | Node.js, Express.js |
+| Data | Sequelize, TiDB (MySQL-compatible) |
+| Database connection | MariaDB dialect / driver |
+| Authentication | JWT, OTP |
+| Authorization | Roles and permission middleware |
+| Payments | Zarinpal |
+| Documentation | OpenAPI / Swagger UI |
 | Testing | Jest, Supertest, Postman |
-| Deployment | Render |
+| Hosting | Render |
 
+## 🧠 Technical decisions — why these choices?
 
-## 🧠 Technical Decisions & Trade-offs
+**Why Node.js and Express?** Node.js fits an API that waits on database and gateway I/O. Express keeps routing, middleware, and request handling visible and flexible. **Trade-off:** I have to maintain consistent structure and validation myself.
 
-One of the most valuable parts of this project has been learning not just how to use different technologies, but when and why to use them.
+**Why relational data and TiDB?** Users, products, variants, orders, and payments have explicit relationships, and checkout benefits from transactions. TiDB offers a MySQL-compatible SQL interface. The project currently connects using Sequelize's `mariadb` dialect; this works for the configured connection, but compatibility does not imply identical support for every DDL operation.
 
-Here are some of the technical choices behind the implementation and the trade-offs worth discussing.
+**Why Sequelize?** Models, associations, and transactions make related operations easier to organize in JavaScript, including creating products with variants. **Trade-off:** ORM abstractions still require an understanding of SQL, constraints, and database behavior. After a TiDB schema-alteration issue, automatic `sequelize.sync({ alter: true })` was disabled; migrations are planned.
 
-| Technology | Why it fits this project |
-|---|---|
-| **Node.js** | Supports asynchronous I/O, which is useful for APIs handling database operations and external service requests. |
-| **Express.js** | Provides a lightweight foundation with explicit routing and middleware, making the request lifecycle easier to explore and understand. |
-| **TiDB** | Offers a MySQL-compatible relational database for storing structured data such as users, products, orders, and payments. |
-| **Sequelize** | Helps organize database models, associations, and transactional operations within JavaScript code. |
-| **JWT + OTP** | Combines a phone-based login flow with token-based authentication for protected endpoints. |
-| **RBAC** | Separates administrative capabilities from regular user access and supports more specific permission checks. |
-| **Jest + Supertest** | Supports automated testing of business logic and HTTP endpoints, including failure scenarios. |
-| **Render** | Provides accessible hosting for a live portfolio demonstration. |
+**Why JWT, OTP, and RBAC?** OTP provides a phone-based sign-in flow; JWT authenticates API requests. Roles protect administrator functions, and permissions allow finer controls for user administration. **Trade-off:** token lifecycle and permission assignments require careful validation and maintenance.
 
-### Why a relational database?
+**Why reserve stock before payment?** It reduces the risk of starting payment for unavailable items. **Trade-off:** unpaid checkouts temporarily hold stock, so expiration and reconciliation are necessary.
 
-An online store has strongly related entities: users place orders, orders contain products, and payments are associated with checkout operations.
+**Why idempotency keys?** A repeated checkout request should not automatically create a second order. `POST /payment` requires a **16–80 character** `Idempotency-Key`, stored as `Payment.checkoutKey` and checked per user. The Sequelize model does not itself declare a unique constraint on this field; concurrency guarantees depend on the deployed database schema and are a follow-up verification item.
 
-A relational database is a natural fit for modeling these relationships and supporting transactional consistency.
+**Why explicit order transitions?** Once payment is confirmed, an order moves to `inProcess`, then an admin can move it through `packed` → `inTransit` → `delivery`. Cancellation is permitted from `inProcess`, `packed`, or `inTransit`, and requires a reason. **Trade-off:** transitions must be maintained as business rules evolve.
 
-TiDB was used as the MySQL-compatible database for this project. While its compatibility is useful, some schema operations require special care; automatic schema alteration has therefore been disabled in favor of a future migration-based approach.
+**Why Jest and Supertest?** They let me test success and failure paths—including authorization failures, insufficient stock, and duplicate checkout attempts—without relying only on manual API checks. **Trade-off:** mocked unit tests don't replace integration tests against a real database and gateway.
 
-### Why Sequelize?
+## 🧪 Tests
 
-Sequelize provides a structured way to define models, handle associations, and execute database transactions.
+Latest local Jest run:
 
-I used transactions in areas such as product creation and checkout, where multiple database operations need to be coordinated.
-
-The trade-off is that ORM abstractions don't eliminate the need to understand SQL, database constraints, or dialect-specific behavior.
-
-### Why Express instead of a more opinionated framework?
-
-Express keeps the framework layer relatively small and gives direct control over routing, middleware, and application structure.
-
-For this portfolio project, that makes it useful for working directly with important backend concepts.
-
-The trade-off is that architecture, validation, and separation of concerns need to be established consistently within the project rather than being enforced by the framework itself.
-
-### Why automated tests?
-
-A successful HTTP response doesn't necessarily mean the underlying business logic is correct.
-
-The test suite focuses on scenarios such as invalid authentication, unauthorized operations, insufficient stock, duplicate checkout attempts, and invalid order transitions.
-
-Many tests use mocks to isolate application logic. Real database concurrency and payment gateway behavior still require additional integration testing.
-
-
-## 🧪 Testing
-
-Testing is an important part of this project.
-
-<escape>
-**Latest local test results**
-
-✅ 162 passing tests  
-✅ 12 passing test suites  
-✅ 76.39% line coverage  
-✅ 59.46% branch coverage
-</escape>
-
-The tests cover important scenarios involving authentication middleware, authorization, product operations, basket calculations, order transitions, stock reservation, payment handling, and RBAC.
-
-Many tests use mocked database models and payment dependencies, so these results should not be interpreted as complete end-to-end verification of the live payment gateway or database.
-
-Run the test suite locally:
+| Metric | Result |
+|---|---:|
+| Test suites | **12 passed** |
+| Tests | **162 passed** |
+| Line coverage | **76.39%** |
+| Branch coverage | **59.46%** |
 
 ```bash
 npm test
-```
-
-Generate a coverage report:
-
-```bash
 npm run test:coverage
 ```
 
-## 🗂️ Project Structure
+## 🗂️ Structure
 
 ```text
 online-store/
 ├── common/                 # Shared constants
-├── config/                 # Database and Swagger configuration
+├── config/                 # Database and API documentation config
 ├── middlewares/            # Shared middleware
 ├── modules/
 │   ├── auth/               # Authentication
-│   ├── admin/              # User administration
-│   ├── product/            # Product management
+│   ├── admin/              # User management
+│   ├── product/            # Products and variants
 │   ├── basket/             # Shopping basket
 │   ├── order/              # Orders
-│   ├── payment/            # Payments and stock reservation
+│   ├── payment/            # Checkout and reservations
 │   ├── RBAC/               # Roles and permissions
 │   ├── user/               # User models
 │   └── zarinpal/           # Gateway integration
-├── test/                   # Unit and integration tests
-├── app.js                  # Express application
-├── server.js               # Application startup
+├── test/                   # Automated tests
+├── app.js
+├── server.js
 └── package.json
 ```
 
-The modular structure separates different responsibilities and makes the project easier to understand, test and extend.
+## ⚙️ Run locally
 
-## ⚙️ Running Locally
-
-If you'd like to explore or run the code yourself:
-
-**1. Clone the repository**
+If you're reviewing the project, the [hosted Swagger UI](https://online-store-qihx.onrender.com/api-docs/) is the fastest route.
 
 ```bash
 git clone https://github.com/zahramalekpour/online-store.git
 cd online-store
-```
-
-**2. Install dependencies**
-
-```bash
 npm install
 ```
 
-**3. Configure the environment**
-
-Create a `.env` file with your own database credentials, JWT secrets and, if testing payments, appropriate Zarinpal sandbox configuration.
-
-Do not use production credentials for local testing.
-
-The application expects an existing, correctly configured database schema. Automatic schema alteration is intentionally disabled.
-
-**4. Start the server**
+Set up a private `.env` with your own database settings, token secrets, and gateway test configuration. The application expects the database tables and relationships to exist; **automatic schema alteration is disabled**. A standalone schema bootstrap script and a verified `.env.example` are not currently supplied, so a fresh database setup needs additional configuration.
 
 ```bash
 npm start
-```
-
-For development:
-
-```bash
+# or
 npm run dev
 ```
 
-The default local application port is `2500`, unless configured otherwise.
+Never commit credentials. Use a test gateway configuration rather than a real purchase when exploring checkout.
 
-For a faster review, using the hosted Swagger documentation is recommended over setting up the project locally.
+## 🧭 What's next?
 
-## 🔎 API Documentation
+This release is a **portfolio demonstration**. The next improvements I'd like to work on are:
 
-The REST API is documented with Swagger UI.
+- Reproducible setup with `.env.example`, database schema migrations, and seed data
+- Real-database concurrency tests and verification of checkout-key uniqueness
+- Automated reconciliation/refund handling for late payment confirmation
+- Deeper OTP and gateway integration tests
+- Product search and pagination
+- Dependency security fixes (the latest local audit reported three moderate findings in Swagger-related dependencies)
 
-You can inspect endpoints, request bodies, response structures and authorization requirements directly in the browser.
+## 💬 Feedback
 
-📖 **[Explore the API Documentation](https://online-store-qihx.onrender.com/api-docs/)**
-
-For safety, avoid initiating real payment transactions or performing administrative mutations in the public demo.
-
-## 🧭 Current Status & Next Steps
-
-**Status: Portfolio MVP — v1.0.0**
-
-The core features have been implemented and tested locally. This version demonstrates the backend architecture and business logic, but is not presented as a production-ready commerce platform.
-
-Areas I'd like to continue improving include:
-
-- Version-controlled database migrations
-- Additional integration and end-to-end tests
-- Expanded authentication and gateway test coverage
-- More flexible product search and pagination
-- Dependency security updates and deployment hardening
-
-The current dependency audit also reports three moderate-severity findings associated with Swagger documentation dependencies. These remain tracked for future remediation.
-
-## 💬 A Final Note
-
-This project has been a hands-on opportunity for me to work through backend concepts and see how they connect in a larger application.
-
-I'm continuing to improve my understanding of the architecture, the trade-offs behind the implementation, and the tools used throughout the project.
-
-Thanks for taking the time to explore it! 🌱
-
-**Built with curiosity, practice, and a commitment to learning.**
+Thanks for taking a look! 👋 Feedback and code-review suggestions are welcome through [GitHub Issues](https://github.com/zahramalekpour/online-store/issues).
