@@ -1,4 +1,3 @@
-
 const { Router } = require("express");
 const { Op } = require("sequelize");
 const createHttpError = require("http-errors");
@@ -10,6 +9,278 @@ const authGuard = require("../auth/auth.guard");
 const requireRole = require("../auth/requireRole");
 const { requirePermission } = require("../RBAC/requirePermission");
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     AdminUser:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 1
+ *         fullname:
+ *           type: string
+ *           nullable: true
+ *           example: Test User
+ *         mobile:
+ *           type: string
+ *           example: "09123456789"
+ *         roleId:
+ *           type: integer
+ *           nullable: true
+ *           example: 2
+ *         role:
+ *           type: string
+ *           nullable: true
+ *           example: user
+ *
+ *     AdminUpdateFullname:
+ *       type: object
+ *       required: [fullname]
+ *       properties:
+ *         fullname:
+ *           type: string
+ *           minLength: 2
+ *           maxLength: 100
+ *           example: Updated User
+ *
+ *     AdminUpdateRole:
+ *       type: object
+ *       required: [roleId]
+ *       properties:
+ *         roleId:
+ *           type: integer
+ *           minimum: 1
+ *           example: 2
+ *
+ * /auth/admin/users:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get all users
+ *     description: >
+ *       Admin role and users.read permission required.
+ *       Supports pagination and mobile prefix search.
+ *     operationId: adminGetUsers
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: page
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - name: limit
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *       - name: search
+ *         in: query
+ *         description: Mobile number prefix, up to 11 digits.
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9]{1,11}$'
+ *         example: "0912"
+ *     responses:
+ *       '200':
+ *         description: Users fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/AdminUser'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalUsers:
+ *                       type: integer
+ *                     currentPage:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *       '400':
+ *         description: Invalid pagination or search
+ *       '401':
+ *         description: Authentication required
+ *       '403':
+ *         description: Admin role or users.read permission required
+ *       '500':
+ *         description: Internal server error
+ *
+ * /auth/admin/users/{id}:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get user by ID
+ *     description: Admin role and users.read permission required.
+ *     operationId: adminGetUserById
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       '200':
+ *         description: User fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   $ref: '#/components/schemas/AdminUser'
+ *       '400':
+ *         description: Invalid user ID
+ *       '401':
+ *         description: Authentication required
+ *       '403':
+ *         description: Insufficient permissions
+ *       '404':
+ *         description: User not found
+ *       '500':
+ *         description: Internal server error
+ *   patch:
+ *     tags: [Admin]
+ *     summary: Update user fullname
+ *     description: Admin role and users.update permission required.
+ *     operationId: adminUpdateUser
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AdminUpdateFullname'
+ *     responses:
+ *       '200':
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   $ref: '#/components/schemas/AdminUser'
+ *       '400':
+ *         description: Invalid user ID or fullname
+ *       '401':
+ *         description: Authentication required
+ *       '403':
+ *         description: Insufficient permissions
+ *       '404':
+ *         description: User not found
+ *       '500':
+ *         description: Internal server error
+ *
+ * /auth/admin/users/{id}/role:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get user role
+ *     description: Admin role and users.read permission required.
+ *     operationId: adminGetUserRole
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       '200':
+ *         description: User role retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 userId:
+ *                   type: integer
+ *                 mobile:
+ *                   type: string
+ *                 roleId:
+ *                   type: integer
+ *                   nullable: true
+ *                 role:
+ *                   type: string
+ *                   nullable: true
+ *       '400':
+ *         description: Invalid user ID
+ *       '401':
+ *         description: Authentication required
+ *       '403':
+ *         description: Insufficient permissions
+ *       '404':
+ *         description: User not found
+ *       '500':
+ *         description: Internal server error
+ *   patch:
+ *     tags: [Admin]
+ *     summary: Change user role
+ *     description: >
+ *       Admin role and users.update permission required.
+ *       An admin cannot change their own role.
+ *       The last administrator cannot be demoted.
+ *     operationId: adminUpdateUserRole
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AdminUpdateRole'
+ *     responses:
+ *       '200':
+ *         description: Role updated or already assigned
+ *       '400':
+ *         description: Invalid user ID or role ID
+ *       '401':
+ *         description: Authentication required
+ *       '403':
+ *         description: Insufficient permissions or own role change
+ *       '404':
+ *         description: User or role not found
+ *       '409':
+ *         description: Cannot demote last administrator
+ *       '500':
+ *         description: Internal server error
+ */
 const router = Router();
 
 router.use(authGuard, requireRole("admin"));
@@ -151,9 +422,7 @@ router.patch(
       }
 
       const fullname =
-        typeof req.body?.fullname === "string"
-          ? req.body.fullname.trim()
-          : "";
+        typeof req.body?.fullname === "string" ? req.body.fullname.trim() : "";
 
       if (fullname.length < 2 || fullname.length > 100) {
         return res.status(400).json({
@@ -262,10 +531,7 @@ router.patch(
         });
 
         if (!adminRole) {
-          throw createHttpError(
-            500,
-            "Admin role is not configured",
-          );
+          throw createHttpError(500, "Admin role is not configured");
         }
 
         const user = await User.findByPk(id, {
@@ -298,10 +564,7 @@ router.patch(
         }
 
         // Protect the last admin.
-        if (
-          user.roleId === adminRole.id &&
-          role.id !== adminRole.id
-        ) {
+        if (user.roleId === adminRole.id && role.id !== adminRole.id) {
           const adminCount = await User.count({
             where: { roleId: adminRole.id },
             transaction,
