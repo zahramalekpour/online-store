@@ -176,7 +176,8 @@ router.get("/", getProductHandler);
  *       - Products
  *     summary: Create a new product
  *     operationId: createProduct
- *     description: Create a product with optional details, colors and sizes.
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -186,19 +187,12 @@ router.get("/", getProductHandler);
  *     responses:
  *       '201':
  *         description: Product created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Product created successfully
- *                 productId:
- *                   type: integer
- *                   example: 1
  *       '400':
  *         description: Invalid product data
+ *       '401':
+ *         description: Authentication required or invalid token
+ *       '403':
+ *         description: Admin access required
  *       '500':
  *         description: Internal server error
  */
@@ -249,16 +243,21 @@ router.get("/:id", getProductByIdHandler);
  *       - Products
  *     summary: Delete product by ID
  *     operationId: deleteProductById
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
  *         required: true
  *         schema:
  *           type: integer
- *         example: 1
  *     responses:
  *       '200':
  *         description: Product deleted successfully
+ *       '401':
+ *         description: Authentication required or invalid token
+ *       '403':
+ *         description: Admin access required
  *       '404':
  *         description: Product not found
  *       '500':
@@ -268,6 +267,6 @@ router.delete(
   "/:id",
   authGuard,
   requireRole("admin"),
-  removeProductByIdHandler,
+  removeProductByIdHandler
 );
 module.exports = { productRoutes: router };
