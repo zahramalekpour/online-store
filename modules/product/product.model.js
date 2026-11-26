@@ -68,7 +68,7 @@ const ProductSize = sequelize.define(
     active_discount: { type: DataTypes.INTEGER, allowNull: true },
   },
   {
-    modelName: "product",
+    modelName: "product_size",
     timestamps: false,
     createdAt: "created_at",
     updatedAt: "updated_at",
